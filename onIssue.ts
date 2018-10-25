@@ -1,7 +1,8 @@
-import { HttpStatusCode, IHttp, IModify, IPersistence, IRead } from '@rocket.chat/apps-engine/definition/accessors';
+import { HttpStatusCode, IHttp, IModify, IPersistence, IRead, IMessageBuilder } from '@rocket.chat/apps-engine/definition/accessors';
 import { IApiRequest, IApiResponse } from '@rocket.chat/apps-engine/definition/api';
 import { ApiEndpoint } from '@rocket.chat/apps-engine/definition/api/ApiEndpoint';
 import { IApiEndpointInfo } from '@rocket.chat/apps-engine/definition/api/IApiEndpointInfo';
+import { startNewMessageWithDefaultSenderConfig, parseJiraDomainFromIssueUrl } from './helpers';
 
 export class OnIssueEndpoint extends ApiEndpoint {
     public path: string = 'on_issue';
@@ -19,7 +20,11 @@ export class OnIssueEndpoint extends ApiEndpoint {
 
         const {issue_event_type_name, issue, user, changelog} = request.content;
 
-        if (issue_event_type_name === 'issue_updated' || issue_event_type_name === 'issue_assigned') {
+        const messageBuilder = startNewMessageWithDefaultSenderConfig(modify, sender);
+
+        if (issue_event_type_name === 'issue_created') {
+            this.processIssueCreatedEvent(request, messageBuilder, modify, read);
+        } else if (issue_event_type_name === 'issue_updated') {
             changelog.items.forEach((item) => {
                 if (item.field !== 'assignee') {
                     return;
@@ -50,5 +55,33 @@ export class OnIssueEndpoint extends ApiEndpoint {
         return {
             status: HttpStatusCode.OK,
         };
+    }
+
+    private async processIssueCreatedEvent(request: IApiRequest, messageBuilder: IMessageBuilder, modify: IModify, read: IRead): Promise<void> {
+        const { issue, user, changelog } = request.content;
+        const { displayName: from } = user;
+        const issueType = issue.fields.issuetype.name;
+        const status = issue.fields.status.name;
+        const assignee = issue.fields.assignee ? issue.fields.assignee.name : 'Unassigned';
+        const attachment = {
+            title: {
+                value: `${issue.key}: ${issue.fields.summary}`,
+                link: `${parseJiraDomainFromIssueUrl(issue.self)}/browse/${issue.key}`
+            }
+        }
+
+        // We may have to send the message to multiple rooms in the future
+        const room = await read.getRoomReader().getById('GENERAL');
+
+        if (!room) {
+            this.app.getLogger().error('Invalid room provided');
+            return;
+        }
+
+        messageBuilder.setRoom(room);
+        messageBuilder.setText(`*${from}* created a \`${issueType}\` in \`${status}\` assigned to *${assignee}*`)
+        messageBuilder.addAttachment(attachment);
+
+        modify.getCreator().finish(messageBuilder);
     }
 }
