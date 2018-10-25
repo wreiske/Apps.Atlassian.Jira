@@ -1,8 +1,8 @@
-import { HttpStatusCode, IHttp, IModify, IPersistence, IRead, IMessageBuilder } from '@rocket.chat/apps-engine/definition/accessors';
+import { HttpStatusCode, IHttp, IMessageBuilder, IModify, IPersistence, IRead } from '@rocket.chat/apps-engine/definition/accessors';
 import { IApiRequest, IApiResponse } from '@rocket.chat/apps-engine/definition/api';
 import { ApiEndpoint } from '@rocket.chat/apps-engine/definition/api/ApiEndpoint';
 import { IApiEndpointInfo } from '@rocket.chat/apps-engine/definition/api/IApiEndpointInfo';
-import { startNewMessageWithDefaultSenderConfig, parseJiraDomainFromIssueUrl } from './helpers';
+import { parseJiraDomainFromIssueUrl, startNewMessageWithDefaultSenderConfig } from './helpers';
 
 const ISSUE_EVENT_CREATED = 'issue_created';
 const ISSUE_EVENT_UPDATED = 'issue_updated';
@@ -35,7 +35,7 @@ export class OnIssueEndpoint extends ApiEndpoint {
         const messageBuilder = startNewMessageWithDefaultSenderConfig(modify, sender, room);
         let sendMessage = true;
 
-        switch(request.content.issue_event_type_name) {
+        switch (request.content.issue_event_type_name) {
             case ISSUE_EVENT_CREATED:
                 this.processIssueCreatedEvent(request, messageBuilder);
                 break;
@@ -73,11 +73,11 @@ export class OnIssueEndpoint extends ApiEndpoint {
         const attachment = {
             title: {
                 value: `${issue.key}: ${issue.fields.summary}`,
-                link: `${parseJiraDomainFromIssueUrl(issue.self)}/browse/${issue.key}`
-            }
-        }
+                link: `${parseJiraDomainFromIssueUrl(issue.self)}/browse/${issue.key}`,
+            },
+        };
 
-        messageBuilder.setText(`*${from}* created a \`${issueType}\` in \`${status}\` assigned to *${assignee}*`)
+        messageBuilder.setText(`*${from}* created a \`${issueType}\` in \`${status}\` assigned to *${assignee}*`);
         messageBuilder.addAttachment(attachment);
     }
 
@@ -88,13 +88,13 @@ export class OnIssueEndpoint extends ApiEndpoint {
         const attachment = {
             title: {
                 value: `${issue.key}: ${issue.fields.summary}`,
-                link: `${parseJiraDomainFromIssueUrl(issue.self)}/browse/${issue.key}`
-            }
-        }
-        let statusFrom = undefined;
-        let statusTo = undefined;
+                link: `${parseJiraDomainFromIssueUrl(issue.self)}/browse/${issue.key}`,
+            },
+        };
+        let statusFrom;
+        let statusTo;
 
-        changelog.items.forEach(item => {
+        changelog.items.forEach((item) => {
             if (item.field !== 'status') {
                 return;
             }
@@ -108,7 +108,7 @@ export class OnIssueEndpoint extends ApiEndpoint {
             return false;
         }
 
-        messageBuilder.setText(`*${from}* transitioned a \`${issueType}\` from \`${statusFrom}\` to \`${statusTo}\``)
+        messageBuilder.setText(`*${from}* transitioned a \`${issueType}\` from \`${statusFrom}\` to \`${statusTo}\``);
         messageBuilder.addAttachment(attachment);
 
         return true;
@@ -122,10 +122,10 @@ export class OnIssueEndpoint extends ApiEndpoint {
         const attachment = {
             title: {
                 value: `${issue.key}: ${issue.fields.summary}`,
-                link: `${parseJiraDomainFromIssueUrl(issue.self)}/browse/${issue.key}`
-            }
-        }
-        let assignee = undefined;
+                link: `${parseJiraDomainFromIssueUrl(issue.self)}/browse/${issue.key}`,
+            },
+        };
+        let assignee;
 
         changelog.items.forEach((item) => {
             if (item.field !== 'assignee') {
@@ -139,7 +139,6 @@ export class OnIssueEndpoint extends ApiEndpoint {
         if (assignee === undefined) {
             return false;
         }
-
 
         messageBuilder.setText(`*${from}* assigned a \`${issueType}\` in \`${status}\` to *${assignee}*`);
         messageBuilder.addAttachment(attachment);
