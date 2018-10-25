@@ -1,9 +1,11 @@
 import { HttpStatusCode, IHttp, IModify, IPersistence, IRead, IMessageBuilder } from '@rocket.chat/apps-engine/definition/accessors';
 import { IUser } from '@rocket.chat/apps-engine/definition/users';
+import { IRoom } from '@rocket.chat/apps-engine/definition/rooms';
 
-export function startNewMessageWithDefaultSenderConfig(modify: IModify, sender: IUser): IMessageBuilder {
+export function startNewMessageWithDefaultSenderConfig(modify: IModify, sender: IUser, room: IRoom): IMessageBuilder {
     return modify.getCreator().startMessage()
         .setSender(sender)
+        .setRoom(room)
         // @TODO maybe an app setting?
         .setUsernameAlias('Jira')
         // @TODO maybe an app setting?
