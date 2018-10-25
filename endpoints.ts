@@ -89,7 +89,11 @@ export class ManifestEndpoint extends ApiEndpoint {
                     webhooks: [
                         {
                             event: 'comment_created',
-                            url: '/comment-created?issue={issue.key}',
+                            url: '/on_comment?issue={issue.key}',
+                        },
+                        {
+                            event: 'comment_updated',
+                            url: '/on_comment?issue={issue.key}',
                         },
                         {
                             event: 'jira:issue_created',

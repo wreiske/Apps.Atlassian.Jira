@@ -10,6 +10,7 @@ import { IAppInfo } from '@rocket.chat/apps-engine/definition/metadata';
 // import { ApiSecurity, ApiVisibility } from '@rocket.chat/apps-engine/definition/api/IApi';
 import { ApiSecurity, ApiVisibility } from '@rocket.chat/apps-engine/definition/api/IApi';
 import { AuthEndpoint, InstallEndpoint, ManifestEndpoint, SampleEndpoint } from './endpoints';
+import { OnCommentEndpoint } from './onComment';
 import { OnIssueEndpoint } from './onIssue';
 
 export class JiraApp extends App {
@@ -28,6 +29,7 @@ export class JiraApp extends App {
                 new AuthEndpoint(this),
                 new OnIssueEndpoint(this),
                 new SampleEndpoint(this),
+                new OnCommentEndpoint(this),
             ],
         });
 
