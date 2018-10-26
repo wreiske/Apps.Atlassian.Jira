@@ -69,7 +69,7 @@ export class OnCommentEndpoint extends ApiEndpoint {
 
     private processCommentCreatedEvent(request: IApiRequest, messageBuilder: IMessageBuilder): void {
         const { issue, comment } = request.content;
-        const { updateAuthor: { displayName: from }, body: description } = comment;
+        const { updateAuthor: { displayName: from }, body: text } = comment;
         const issueType = issue.fields.issuetype.name;
         const status = issue.fields.status.name;
         const attachment = {
@@ -78,9 +78,11 @@ export class OnCommentEndpoint extends ApiEndpoint {
                 link:
                     `${parseJiraDomainFromIssueUrl(issue.self)}/browse/${
                         issue.key
-                    }?focusedCommentId=${comment.id}&#comment-${comment.id}`,
+                    }?focusedCommentId=${
+                        comment.id
+                    }&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-${comment.id}`,
             },
-            description,
+            text,
         };
 
         messageBuilder.setText(`*${from}* commented on a \`${issueType}\` in \`${status}\``);
@@ -89,7 +91,7 @@ export class OnCommentEndpoint extends ApiEndpoint {
 
     private processCommentUpdatedEvent(request: IApiRequest, messageBuilder: IMessageBuilder): void {
         const { issue, comment } = request.content;
-        const { updateAuthor: { displayName: from }, body: description } = comment;
+        const { updateAuthor: { displayName: from }, body: text } = comment;
         const issueType = issue.fields.issuetype.name;
         const status = issue.fields.status.name;
         const attachment = {
@@ -98,9 +100,11 @@ export class OnCommentEndpoint extends ApiEndpoint {
                 link:
                     `${parseJiraDomainFromIssueUrl(issue.self)}/browse/${
                         issue.key
-                    }?focusedCommentId=${comment.id}&#comment-${comment.id}`,
+                    }?focusedCommentId=${
+                        comment.id
+                    }&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-${comment.id}`,
             },
-            description,
+            text,
         };
 
         messageBuilder.setText(`*${from}* edited a comment on a \`${issueType}\` in \`${status}\``);
