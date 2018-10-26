@@ -1,18 +1,14 @@
-import {
-    IConfigurationExtend,
-    ILogger,
-} from '@rocket.chat/apps-engine/definition/accessors';
+import { IConfigurationExtend, ILogger } from '@rocket.chat/apps-engine/definition/accessors';
+import { ApiSecurity, ApiVisibility } from '@rocket.chat/apps-engine/definition/api/IApi';
 import { App } from '@rocket.chat/apps-engine/definition/App';
 import { IAppInfo } from '@rocket.chat/apps-engine/definition/metadata';
-// import { SettingType } from '@rocket.chat/apps-engine/definition/settings';
 
-// import { JitsiSlashCommand } from './slashcommand';
-// import { ApiSecurity, ApiVisibility } from '@rocket.chat/apps-engine/definition/api/IApi';
-import { ApiSecurity, ApiVisibility } from '@rocket.chat/apps-engine/definition/api/IApi';
+import { settings } from './app-settings';
 import { AuthEndpoint, InstallEndpoint, ManifestEndpoint, SampleEndpoint } from './endpoints';
 import { OnCommentEndpoint } from './onComment';
 import { OnIssueEndpoint } from './onIssue';
 
+// import { JitsiSlashCommand } from './slashcommand';
 export class JiraApp extends App {
     constructor(info: IAppInfo, logger: ILogger) {
         super(info, logger);
@@ -33,14 +29,6 @@ export class JiraApp extends App {
             ],
         });
 
-        // await configuration.settings.provideSetting({
-        //     id: 'server',
-        //     type: SettingType.STRING,
-        //     packageValue: 'https://meet.jit.si/',
-        //     required: true,
-        //     public: false,
-        //     i18nLabel: 'server',
-        //     i18nDescription: 'server_description',
-        // });
+        await Promise.all(settings.map((setting) => configuration.settings.provideSetting(setting)));
     }
 }

@@ -34,7 +34,7 @@ export class OnIssueEndpoint extends ApiEndpoint {
             };
         }
 
-        const messageBuilder = startNewMessageWithDefaultSenderConfig(modify, sender, room);
+        const messageBuilder = await startNewMessageWithDefaultSenderConfig(modify, read, sender, room);
         let sendMessage = true;
 
         switch (request.content.issue_event_type_name) {

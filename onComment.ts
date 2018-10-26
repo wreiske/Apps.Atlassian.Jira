@@ -40,7 +40,7 @@ export class OnCommentEndpoint extends ApiEndpoint {
             };
         }
 
-        const messageBuilder = startNewMessageWithDefaultSenderConfig(modify, sender, room);
+        const messageBuilder = await startNewMessageWithDefaultSenderConfig(modify, read, sender, room);
         let sendMessage = true;
 
         switch (request.content.webhookEvent) {
