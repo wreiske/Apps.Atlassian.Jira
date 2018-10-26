@@ -4,10 +4,12 @@ import { ApiEndpoint } from '@rocket.chat/apps-engine/definition/api/ApiEndpoint
 import { IApiEndpointInfo } from '@rocket.chat/apps-engine/definition/api/IApiEndpointInfo';
 import { parseJiraDomainFromIssueUrl, startNewMessageWithDefaultSenderConfig } from './helpers';
 
-const ISSUE_EVENT_CREATED = 'issue_created';
-const ISSUE_EVENT_UPDATED = 'issue_updated';
-const ISSUE_EVENT_GENERIC = 'issue_generic';
-const ISSUE_EVENT_ASSIGNED = 'issue_assigned';
+enum IssueEvent {
+    Created = 'issue_created',
+    Updated = 'issue_updated',
+    Generic = 'issue_generic',
+    Assigned = 'issue_assigned',
+}
 
 export class OnIssueEndpoint extends ApiEndpoint {
     public path: string = 'on_issue';
@@ -36,16 +38,16 @@ export class OnIssueEndpoint extends ApiEndpoint {
         let sendMessage = true;
 
         switch (request.content.issue_event_type_name) {
-            case ISSUE_EVENT_CREATED:
+            case IssueEvent.Created:
                 this.processIssueCreatedEvent(request, messageBuilder);
                 break;
 
-            case ISSUE_EVENT_UPDATED:
-            case ISSUE_EVENT_ASSIGNED:
+            case IssueEvent.Updated:
+            case IssueEvent.Assigned:
                 sendMessage = this.processIssueUpdatedEvent(request, messageBuilder);
                 break;
 
-            case ISSUE_EVENT_GENERIC:
+            case IssueEvent.Generic:
                 sendMessage = this.processIssueGenericEvent(request, messageBuilder);
                 break;
 

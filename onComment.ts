@@ -12,8 +12,10 @@ import { IApiEndpointInfo } from '@rocket.chat/apps-engine/definition/api/IApiEn
 
 import { parseJiraDomainFromIssueUrl, startNewMessageWithDefaultSenderConfig } from './helpers';
 
-const WEBHOOK_EVENT_COMMENT_CREATED = 'comment_created';
-const WEBHOOK_EVENT_COMMENT_UPDATED = 'comment_updated';
+enum WebhookEvent {
+    CommentCreated = 'comment_created',
+    CommentUpdated = 'comment_updated',
+}
 
 export class OnCommentEndpoint extends ApiEndpoint {
     public path: string = 'on_comment';
@@ -42,11 +44,11 @@ export class OnCommentEndpoint extends ApiEndpoint {
         let sendMessage = true;
 
         switch (request.content.webhookEvent) {
-            case WEBHOOK_EVENT_COMMENT_CREATED:
+            case WebhookEvent.CommentCreated:
                 this.processCommentCreatedEvent(request, messageBuilder);
                 break;
 
-            case WEBHOOK_EVENT_COMMENT_UPDATED:
+            case WebhookEvent.CommentUpdated:
                 this.processCommentUpdatedEvent(request, messageBuilder);
                 break;
 
