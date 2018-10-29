@@ -54,7 +54,7 @@ export class OnIssueEndpoint extends ApiEndpoint {
                 break;
 
             default:
-                this.app.getLogger().error('Unknown event received');
+                this.app.getLogger().error(`Unknown event received: ${request.content.issue_event_type_name}`);
                 sendMessage = false;
                 break;
         }

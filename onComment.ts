@@ -49,7 +49,7 @@ export class OnCommentEndpoint extends ApiEndpoint {
                 break;
 
             default:
-                this.app.getLogger().error('Unknown event received');
+                this.app.getLogger().error(`Unknown event received: ${request.content.webhookEvent}`);
                 sendMessage = false;
                 break;
         }
