@@ -10,12 +10,8 @@ import { IApiRequest, IApiResponse } from '@rocket.chat/apps-engine/definition/a
 import { ApiEndpoint } from '@rocket.chat/apps-engine/definition/api/ApiEndpoint';
 import { IApiEndpointInfo } from '@rocket.chat/apps-engine/definition/api/IApiEndpointInfo';
 
+import { WebhookEventEnum } from './enums/WebhookEventEnum';
 import { parseJiraDomainFromIssueUrl, startNewMessageWithDefaultSenderConfig } from './helpers';
-
-enum WebhookEvent {
-    CommentCreated = 'comment_created',
-    CommentUpdated = 'comment_updated',
-}
 
 export class OnCommentEndpoint extends ApiEndpoint {
     public path: string = 'on_comment';
@@ -44,11 +40,11 @@ export class OnCommentEndpoint extends ApiEndpoint {
         let sendMessage = true;
 
         switch (request.content.webhookEvent) {
-            case WebhookEvent.CommentCreated:
+            case WebhookEventEnum.CommentCreated:
                 this.processCommentCreatedEvent(request, messageBuilder);
                 break;
 
-            case WebhookEvent.CommentUpdated:
+            case WebhookEventEnum.CommentUpdated:
                 this.processCommentUpdatedEvent(request, messageBuilder);
                 break;
 

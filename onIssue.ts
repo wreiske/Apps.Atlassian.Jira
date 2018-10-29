@@ -1,15 +1,17 @@
-import { HttpStatusCode, IHttp, IMessageBuilder, IModify, IPersistence, IRead } from '@rocket.chat/apps-engine/definition/accessors';
+import {
+    HttpStatusCode,
+    IHttp,
+    IMessageBuilder,
+    IModify,
+    IPersistence,
+    IRead,
+} from '@rocket.chat/apps-engine/definition/accessors';
 import { IApiRequest, IApiResponse } from '@rocket.chat/apps-engine/definition/api';
 import { ApiEndpoint } from '@rocket.chat/apps-engine/definition/api/ApiEndpoint';
 import { IApiEndpointInfo } from '@rocket.chat/apps-engine/definition/api/IApiEndpointInfo';
-import { parseJiraDomainFromIssueUrl, startNewMessageWithDefaultSenderConfig } from './helpers';
 
-enum IssueEvent {
-    Created = 'issue_created',
-    Updated = 'issue_updated',
-    Generic = 'issue_generic',
-    Assigned = 'issue_assigned',
-}
+import { IssueEventEnum } from './enums/IssueEventEnum';
+import { parseJiraDomainFromIssueUrl, startNewMessageWithDefaultSenderConfig } from './helpers';
 
 export class OnIssueEndpoint extends ApiEndpoint {
     public path: string = 'on_issue';
@@ -38,16 +40,16 @@ export class OnIssueEndpoint extends ApiEndpoint {
         let sendMessage = true;
 
         switch (request.content.issue_event_type_name) {
-            case IssueEvent.Created:
+            case IssueEventEnum.Created:
                 this.processIssueCreatedEvent(request, messageBuilder);
                 break;
 
-            case IssueEvent.Updated:
-            case IssueEvent.Assigned:
+            case IssueEventEnum.Updated:
+            case IssueEventEnum.Assigned:
                 sendMessage = this.processIssueUpdatedEvent(request, messageBuilder);
                 break;
 
-            case IssueEvent.Generic:
+            case IssueEventEnum.Generic:
                 sendMessage = this.processIssueGenericEvent(request, messageBuilder);
                 break;
 
