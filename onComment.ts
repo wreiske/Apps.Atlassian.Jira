@@ -54,7 +54,7 @@ export class OnCommentEndpoint extends ApiEndpoint {
                 break;
         }
 
-        if (sendMessage !== false) {
+        if (sendMessage) {
             modify.getCreator().finish(messageBuilder);
         }
 
