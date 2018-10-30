@@ -1,6 +1,8 @@
 {
     "params_example": "[room name (optional)]",
     "command_description": "Generate an Jitsi video meeting URL.",
-    "server": "Server",
-    "server_description": "Jitsi server from where the slash command will generate the URLs"
+    "user_alias_label": "JiraApp Username Alias",
+    "user_alias_description": "The username alias that will be shown in the messages sent by this app",
+    "user_avatar_label": "JiraApp Avatar",
+    "user_avatar_description": "The user avatar that will be shown in the messages sent by this app"
 }

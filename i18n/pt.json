@@ -1,0 +1,8 @@
+{
+    "params_example": "[room name (optional)]",
+    "command_description": "Generate an Jitsi video meeting URL.",
+    "user_alias_label": "Alias de usuário do JiraApp",
+    "user_alias_description": "O username que será mostrado nas mensagens enviadas pelo App",
+    "user_avatar_label": "Avatar do JiraApp",
+    "user_avatar_description": "O avatar que será mostrado nas mensagens enviadas pelo App"
+}

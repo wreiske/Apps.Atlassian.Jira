@@ -1,7 +1,17 @@
-import { HttpStatusCode, IHttp, IModify, IPersistence, IRead } from '@rocket.chat/apps-engine/definition/accessors';
+import {
+    HttpStatusCode,
+    IHttp,
+    IMessageBuilder,
+    IModify,
+    IPersistence,
+    IRead,
+} from '@rocket.chat/apps-engine/definition/accessors';
 import { IApiRequest, IApiResponse } from '@rocket.chat/apps-engine/definition/api';
 import { ApiEndpoint } from '@rocket.chat/apps-engine/definition/api/ApiEndpoint';
 import { IApiEndpointInfo } from '@rocket.chat/apps-engine/definition/api/IApiEndpointInfo';
+
+import { IssueEventEnum } from './enums/IssueEventEnum';
+import { parseJiraDomainFromIssueUrl, startNewMessageWithDefaultSenderConfig } from './helpers';
 
 export class OnIssueEndpoint extends ApiEndpoint {
     public path: string = 'on_issue';
@@ -12,43 +22,131 @@ export class OnIssueEndpoint extends ApiEndpoint {
         const room = await read.getRoomReader().getById('GENERAL');
 
         if (!sender || !room) {
+
+            if (!sender) {
+                this.app.getLogger().error('No `sender` configured for the app');
+            }
+
+            if (!room) {
+                this.app.getLogger().error('No `room` configured for the app');
+            }
+
             return {
                 status: HttpStatusCode.OK,
             };
         }
 
-        const {issue_event_type_name, issue, user, changelog} = request.content;
+        const messageBuilder = await startNewMessageWithDefaultSenderConfig(modify, read, sender, room);
+        let sendMessage = true;
 
-        if (issue_event_type_name === 'issue_updated' || issue_event_type_name === 'issue_assigned') {
-            changelog.items.forEach((item) => {
-                if (item.field !== 'assignee') {
-                    return;
-                }
+        switch (request.content.issue_event_type_name) {
+            case IssueEventEnum.Created:
+                this.processIssueCreatedEvent(request, messageBuilder);
+                break;
 
-                const msg = modify.getCreator().startMessage()
-                    .setSender(sender)
-                    .setUsernameAlias('Jira')
-                    .setAvatarUrl('https://slack-files2.s3-us-west-2.amazonaws.com/avatars/2017-09-11/239622728805_193a5464df40bdbdb528_512.png')
-                    .setRoom(room);
+            case IssueEventEnum.Updated:
+            case IssueEventEnum.Assigned:
+                sendMessage = this.processIssueUpdatedEvent(request, messageBuilder);
+                break;
 
-                const from = user.displayName;
-                const to = item.toString || 'Unassigned';
+            case IssueEventEnum.Generic:
+                sendMessage = this.processIssueGenericEvent(request, messageBuilder);
+                break;
 
-                msg.setText(`*${from}* assigned a \`${issue.fields.issuetype.name}\` in \`${issue.fields.status.name}\` to *${to}*`);
+            default:
+                this.app.getLogger().error(`Unknown event received: ${request.content.issue_event_type_name}`);
+                sendMessage = false;
+                break;
+        }
 
-                msg.addAttachment({
-                    title: {
-                        value: `${issue.key}: ${issue.fields.summary}`,
-                        link: `https://rocketchat-dev.atlassian.net/browse/${issue.key}`,
-                    },
-                });
-
-                modify.getCreator().finish(msg);
-            });
+        if (sendMessage) {
+            modify.getCreator().finish(messageBuilder);
         }
 
         return {
             status: HttpStatusCode.OK,
         };
+    }
+
+    private processIssueCreatedEvent(request: IApiRequest, messageBuilder: IMessageBuilder): void {
+        const { issue, user } = request.content;
+        const { displayName: from } = user;
+        const issueType = issue.fields.issuetype.name;
+        const status = issue.fields.status.name;
+        const assignee = issue.fields.assignee ? issue.fields.assignee.name : 'Unassigned';
+        const attachment = {
+            title: {
+                value: `${issue.key}: ${issue.fields.summary}`,
+                link: `${parseJiraDomainFromIssueUrl(issue.self)}/browse/${issue.key}`,
+            },
+        };
+
+        messageBuilder.setText(`*${from}* created a \`${issueType}\` in \`${status}\` assigned to *${assignee}*`);
+        messageBuilder.addAttachment(attachment);
+    }
+
+    private processIssueGenericEvent(request: IApiRequest, messageBuilder: IMessageBuilder): boolean {
+        const { issue, user, changelog } = request.content;
+        const { displayName: from } = user;
+        const issueType = issue.fields.issuetype.name;
+        const attachment = {
+            title: {
+                value: `${issue.key}: ${issue.fields.summary}`,
+                link: `${parseJiraDomainFromIssueUrl(issue.self)}/browse/${issue.key}`,
+            },
+        };
+        let statusFrom;
+        let statusTo;
+
+        changelog.items.forEach((item) => {
+            if (item.field !== 'status') {
+                return;
+            }
+
+            statusFrom = item.fromString;
+            statusTo = item.toString;
+        });
+
+        // We only notify on status change, not other updates;
+        if (statusFrom === undefined || statusTo === undefined) {
+            return false;
+        }
+
+        messageBuilder.setText(`*${from}* transitioned a \`${issueType}\` from \`${statusFrom}\` to \`${statusTo}\``);
+        messageBuilder.addAttachment(attachment);
+
+        return true;
+    }
+
+    private processIssueUpdatedEvent(request: IApiRequest, messageBuilder: IMessageBuilder): boolean {
+        const { issue, user, changelog } = request.content;
+        const { displayName: from } = user;
+        const issueType = issue.fields.issuetype.name;
+        const status = issue.fields.status.name;
+        const attachment = {
+            title: {
+                value: `${issue.key}: ${issue.fields.summary}`,
+                link: `${parseJiraDomainFromIssueUrl(issue.self)}/browse/${issue.key}`,
+            },
+        };
+        let assignee;
+
+        changelog.items.forEach((item) => {
+            if (item.field !== 'assignee') {
+                return;
+            }
+
+            assignee = item.toString || 'Unassigned';
+        });
+
+        // We only notify on assignment change, not other updates
+        if (assignee === undefined) {
+            return false;
+        }
+
+        messageBuilder.setText(`*${from}* assigned a \`${issueType}\` in \`${status}\` to *${assignee}*`);
+        messageBuilder.addAttachment(attachment);
+
+        return true;
     }
 }
